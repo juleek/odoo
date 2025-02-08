@@ -15,6 +15,10 @@ __path__ = [
     for path in pkgutil.extend_path(__path__, __name__)
 ]
 
+import logging
+_logger = logging.getLogger(__name__)
+
+
 import sys
 MIN_PY_VERSION = (3, 7)
 MAX_PY_VERSION = (3, 12)
