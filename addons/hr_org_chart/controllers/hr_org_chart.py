@@ -5,6 +5,8 @@ from odoo import http
 from odoo.exceptions import AccessError
 from odoo.http import request
 
+import logging
+_logger = logging.getLogger(__name__)
 
 class HrOrgChartController(http.Controller):
     _managers_level = 5  # FP request

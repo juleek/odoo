@@ -9,6 +9,9 @@ from odoo.tools.float_utils import float_round
 
 from odoo.addons.resource.models.utils import HOURS_PER_DAY
 
+import logging
+_logger = logging.getLogger(__name__)
+
 
 class HrEmployeeBase(models.AbstractModel):
     _inherit = "hr.employee.base"

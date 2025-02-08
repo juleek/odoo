@@ -8,6 +8,9 @@ from odoo import http
 from odoo.http import request
 from odoo.addons.mail.models.discuss.mail_guest import add_guest_to_context
 
+import logging
+_logger = logging.getLogger(__name__)
+
 
 class ThreadController(http.Controller):
     @http.route("/mail/thread/data", methods=["POST"], type="json", auth="user")

@@ -3921,6 +3921,7 @@ class BaseModel(metaclass=MetaModel):
         or to change the values that are put in cache.
         """
 
+
         # determine columns fields and those with their own read() method
         column_fields = OrderedSet()
         other_fields = OrderedSet()
@@ -3964,6 +3965,7 @@ class BaseModel(metaclass=MetaModel):
             # column_values = [(id1, id2, ...), (a1, a2, ...), (b1, b2, ...)]
             column_values = zip(*rows)
             ids = next(column_values)
+
             fetched = self.browse(ids)
 
             # If we assume that the value of a pending update is in cache, we
@@ -5169,6 +5171,7 @@ class BaseModel(metaclass=MetaModel):
 
         # apply main rules on the object
         Rule = self.env['ir.rule']
+
         domain = Rule._compute_domain(self._name, mode)
         if domain:
             expression.expression(domain, self.sudo(), self._table, query)

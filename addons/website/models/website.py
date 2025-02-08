@@ -1531,12 +1531,15 @@ class Website(models.Model):
         # only one canonical and not params permutations.
         params = request.httprequest.args
         canonical_params = canonical_params or OrderedMultiDict()
+        self._get_canonical_url(canonical_params)
         if params != canonical_params:
             return False
         # Compare URL at the first routing iteration because it's the one with
         # the language in the path. It is important to also test the domain of
         # the current URL.
-        current_url = request.httprequest.url_root[:-1] + request.httprequest.environ['REQUEST_URI']
+        a = request.httprequest.environ
+        b = request.httprequest.url_root[:-1]
+        current_url = request.httprequest.url_root[:-1] + request.httprequest.environ['PATH_INFO']
         canonical_url = self._get_canonical_url_localized(lang=request.lang, canonical_params=None)
         # A request path with quotable characters (such as ",") is never
         # canonical because request.httprequest.base_url is always unquoted,

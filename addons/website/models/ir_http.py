@@ -312,7 +312,7 @@ class Http(models.AbstractModel):
     @classmethod
     def _serve_redirect(cls):
         req_page = request.httprequest.path
-        req_page_with_qs = request.httprequest.environ['REQUEST_URI']
+        req_page_with_qs = request.httprequest.environ['PATH_INFO']
         domain = [
             ('redirect_type', 'in', ('301', '302')),
             # trailing / could have been removed by server_page

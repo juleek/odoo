@@ -6,6 +6,9 @@ from odoo import _, models, SUPERUSER_ID
 from odoo.exceptions import AccessError, MissingError, UserError
 from odoo.tools import consteq
 
+import logging
+_logger = logging.getLogger(__name__)
+
 
 class IrAttachment(models.Model):
     _inherit = 'ir.attachment'
@@ -72,7 +75,7 @@ class IrAttachment(models.Model):
         return self.env.user.partner_id
 
     def _attachment_format(self):
-        return [{
+       res = [{
             'checksum': attachment.checksum,
             'create_date': attachment.create_date,
             'id': attachment.id,
@@ -88,3 +91,4 @@ class IrAttachment(models.Model):
             'type': attachment.type,
             'url': attachment.url,
         } for attachment in self]
+       return res
