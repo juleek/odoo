@@ -3764,7 +3764,7 @@ class AccountMoveLine(models.Model):
         check_company=True,
         tracking=True)
     account_internal_type = fields.Selection(related='account_id.user_type_id.type', string="Internal Type", readonly=True)
-    account_internal_group = fields.Selection(related='account_id.user_type_id.internal_group', string="Internal Group", readonly=True)
+    account_internal_group = fields.Selection(related='account_id.internal_group', string="Internal Group", readonly=True)
     account_root_id = fields.Many2one(related='account_id.root_id', string="Account Root", store=True, readonly=True)
     sequence = fields.Integer(default=10)
     name = fields.Char(string='Label', tracking=True, compute='_compute_name', store=True, readonly=False)

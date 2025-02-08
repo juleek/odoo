@@ -2,6 +2,8 @@
 from odoo import api, fields, models, _, tools
 from odoo.osv import expression
 from odoo.exceptions import UserError, ValidationError
+from bisect import bisect_left
+from collections import defaultdict
 
 
 class AccountAccountType(models.Model):
@@ -64,7 +66,44 @@ class AccountAccount(models.Model):
     user_type_id = fields.Many2one('account.account.type', string='Type', required=True, tracking=True,
         help="Account Type is used for information purpose, to generate country-specific legal reports, and set the rules to close a fiscal year and generate opening entries.")
     internal_type = fields.Selection(related='user_type_id.type', string="Internal Type", store=True, readonly=True)
-    internal_group = fields.Selection(related='user_type_id.internal_group', string="Internal Group", store=True, readonly=True)
+    internal_group = fields.Selection(
+        selection=[
+            ('equity', 'Equity'),
+            ('asset', 'Asset'),
+            ('liability', 'Liability'),
+            ('income', 'Income'),
+            ('expense', 'Expense'),
+            ('off_balance', 'Off Balance'),
+        ],
+        string="Internal Group",
+        compute="_compute_internal_group", store=True, precompute=True,
+    )
+    account_type = fields.Selection(
+        selection=[
+            ("asset_receivable", "Receivable"),
+            ("asset_cash", "Bank and Cash"),
+            ("asset_current", "Current Assets"),
+            ("asset_non_current", "Non-current Assets"),
+            ("asset_prepayments", "Prepayments"),
+            ("asset_fixed", "Fixed Assets"),
+            ("liability_payable", "Payable"),
+            ("liability_credit_card", "Credit Card"),
+            ("liability_current", "Current Liabilities"),
+            ("liability_non_current", "Non-current Liabilities"),
+            ("equity", "Equity"),
+            ("equity_unaffected", "Current Year Earnings"),
+            ("income", "Income"),
+            ("income_other", "Other Income"),
+            ("expense", "Expenses"),
+            ("expense_depreciation", "Depreciation"),
+            ("expense_direct_cost", "Cost of Revenue"),
+            ("off_balance", "Off-Balance Sheet"),
+        ],
+        string="Type", tracking=True,
+        required=True,
+        compute='_compute_account_type', store=True, readonly=False, precompute=True, index=True,
+        help="Account Type is used for information purpose, to generate country-specific legal reports, and set the rules to close a fiscal year and generate opening entries."
+    )
     #has_unreconciled_entries = fields.Boolean(compute='_compute_has_unreconciled_entries',
     #    help="The account has at least one unreconciled debit and credit since last time the invoices & payments matching was performed.")
     reconcile = fields.Boolean(string='Allow Reconciliation', default=False, tracking=True,
@@ -94,6 +133,35 @@ class AccountAccount(models.Model):
     _sql_constraints = [
         ('code_company_uniq', 'unique (code,company_id)', 'The code of the account must be unique per company !')
     ]
+
+    @api.depends('code')
+    def _compute_account_type(self):
+        """ Compute the account type based on the account code.
+        Search for the closest parent account code and sets the account type according to the parent.
+        If there is no parent (e.g. the account code is lower than any other existing account code),
+        the account type will be set to 'asset_current'.
+        """
+        accounts_to_process = self.filtered(lambda r: r.code and not r.account_type)
+        all_accounts = self.search_read(
+            domain=[('company_id', 'in', accounts_to_process.company_id.ids)],
+            fields=['code', 'account_type', 'company_id'],
+            order='code',
+        )
+        accounts_with_codes = defaultdict(dict)
+        # We want to group accounts by company to only search for account codes of the current company
+        for account in all_accounts:
+            accounts_with_codes[account['company_id'][0]][account['code']] = account['account_type']
+        for account in accounts_to_process:
+            codes_list = list(accounts_with_codes[account.company_id.id].keys())
+            closest_index = bisect_left(codes_list, account.code) - 1
+            account.account_type = accounts_with_codes[account.company_id.id][codes_list[closest_index]] if closest_index != -1 else 'asset_current'
+
+
+
+    def _compute_internal_group(self):
+        for account in self:
+            if account.account_type:
+                account.internal_group = 'off_balance' if account.account_type == 'off_balance' else account.account_type.split('_')[0]
 
     @api.constrains('reconcile', 'internal_group', 'tax_ids')
     def _constrains_reconcile(self):
@@ -137,8 +205,8 @@ class AccountAccount(models.Model):
         self.env['account.payment.method.line'].flush(['payment_method_id', 'payment_account_id'])
 
         self._cr.execute('''
-            SELECT 
-                account.id, 
+            SELECT
+                account.id,
                 journal.id
             FROM account_journal journal
             JOIN res_company company ON company.id = journal.company_id
@@ -147,11 +215,11 @@ class AccountAccount(models.Model):
             AND journal.currency_id != company.currency_id
             AND account.currency_id != journal.currency_id
             AND account.id IN %(accounts)s
-            
+
             UNION ALL
-            
-            SELECT 
-                account.id, 
+
+            SELECT
+                account.id,
                 journal.id
             FROM account_journal journal
             JOIN res_company company ON company.id = journal.company_id
@@ -163,11 +231,11 @@ class AccountAccount(models.Model):
             AND account.currency_id != journal.currency_id
             AND apm.payment_type = 'inbound'
             AND account.id IN %(accounts)s
-            
+
             UNION ALL
-            
-            SELECT 
-                account.id, 
+
+            SELECT
+                account.id,
                 journal.id
             FROM account_journal journal
             JOIN res_company company ON company.id = journal.company_id

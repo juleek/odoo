@@ -15,9 +15,9 @@ Install some generic chart of accounts.
         'account',
     ],
     'data': [
-        'data/l10n_generic_coa.xml',
+        # 'data/l10n_generic_coa.xml',
         'data/account.account.template.csv',
-        'data/l10n_generic_coa_post.xml',
+        # 'data/l10n_generic_coa_post.xml',
     ],
     'uninstall_hook': 'uninstall_hook',
     'license': 'LGPL-3',
