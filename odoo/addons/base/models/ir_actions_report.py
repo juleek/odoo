@@ -490,7 +490,7 @@ class IrActionsReport(models.Model):
                 #       500 rows each. This reduce the processing time to 1min
                 #       for 250k rows. The number 500 was taken from opw-1689673
                 if len(body) < 4 * 1024 * 1024: # 4Mib
-                    body_file.write(body.encode())
+                    body_file.write(body.encode('utf-8'))
                 else:
                     tree = lxml.html.fromstring(body)
                     _split_table(tree, 500)
