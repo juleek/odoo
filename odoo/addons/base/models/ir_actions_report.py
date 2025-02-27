@@ -449,6 +449,7 @@ class IrActionsReport(models.Model):
             landscape,
             specific_paperformat_args=specific_paperformat_args,
             set_viewport_size=set_viewport_size)
+        command_args.extend(['--encoding', 'UTF-8'])
 
         files_command_args = []
         temporary_files = []
@@ -490,7 +491,7 @@ class IrActionsReport(models.Model):
                 #       500 rows each. This reduce the processing time to 1min
                 #       for 250k rows. The number 500 was taken from opw-1689673
                 if len(body) < 4 * 1024 * 1024: # 4Mib
-                    body_file.write(body.encode('utf-8'))
+                    body_file.write(body.encode())
                 else:
                     tree = lxml.html.fromstring(body)
                     _split_table(tree, 500)
