@@ -4,6 +4,10 @@ from collections import defaultdict
 
 from odoo import _, api, Command, fields, models, modules, tools
 from odoo.tools import email_normalize
+import traceback
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class Users(models.Model):
@@ -123,6 +127,7 @@ class Users(models.Model):
                 _("Your account login has been updated"),
             )
         if 'password' in vals:
+            _logger.info(f"Mail change password: user:{self}, vals {vals}, backtrace: {traceback.format_stack()}")
             self._notify_security_setting_update(
                 _("Security Update: Password Changed"),
                 _("Your account password has been updated"),
